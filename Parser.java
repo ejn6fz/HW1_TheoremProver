@@ -16,9 +16,25 @@ public class Parser {
 		
 			input = scan.nextLine();
 			
-			if (input.contains("->"))
+			if (input.contains("Teach")) {
 				
-			
+				if (input.contains("=")) {
+					
+					if (input.contains('"')){
+						variableInitializer(input);
+					}
+					else {
+						variableBooleanSetter(input);
+					}
+					
+				}
+					
+					
+				if (input.contains("->"))
+					commandParser(input);
+					
+				
+			}
 			
 			
 			
@@ -26,6 +42,14 @@ public class Parser {
 				break;
 			
 		}
+		
+	}
+	
+	public void variableInitializer (String input) {
+		
+	}
+	
+	public void variableBooleanSetter (String input) {
 		
 	}
 	
