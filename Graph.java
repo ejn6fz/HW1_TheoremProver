@@ -19,6 +19,12 @@ public class Graph {
 		return endNodes.add(v);
 	}
 	
+	public boolean connectDowntoUp(Vertex down, Vertex up) {
+		
+		return down.addUpstream(up) && up.addDownstream(down);
+
+	}
+	
 	
 	
 }
