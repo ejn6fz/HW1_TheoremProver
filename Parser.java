@@ -90,9 +90,17 @@ public class Parser {
 		{	
 			if(value.equals("true"))
 			{
-				// 4. Add name to the ArrayList of known facts if it isn't already there
 				if(!(knownFacts.contains(name)))
 					knownFacts.add(name);
+				if(knownFacts.contains("!"+name))
+					knownFacts.remove("!"+name);
+			}
+			else
+			{
+				if(!(knownFacts.contains("!" + name)))
+					knownFacts.add("!" + name);
+				if(knownFacts.contains(name))
+					knownFacts.remove(name);
 			}
 			boolVals.put(name, Boolean.valueOf(value));
 		}
