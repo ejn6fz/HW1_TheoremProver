@@ -117,6 +117,97 @@ public class Parser {
 		}
 	}
 	
+		public static boolean reasonBuilder(Vertex v, String reason) {
+		
+		if (!(reason.contains("!") | reason.contains("&") | reason.contains("|"))) {
+			if(reason.charAt(0) == '(' && reason.charAt(reason.length()-1) == ')') {
+				reason = reason.substring(1,reason.length()-1);
+			}
+			Vertex leafNode = new Vertex(reason);
+			
+			v.addChild(leafNode);
+			leafNode.addParent(v);
+			current.addLeafNode(leafNode);
+			return true;
+		}
+		
+		int parenDepth = 0;
+		int orIndex = -1;
+		int andIndex = -1;
+		int notIndex = -1;
+		
+		for (int i = 0; i < reason.length(); i++) {
+			char c = reason.charAt(i);
+			
+			if (c == '(')
+				parenDepth ++;
+			if (c == ')')
+				parenDepth --;
+			
+			if (c == '|' && parenDepth == 0) {
+				//return good candidate
+				Vertex newNode = new Vertex(c + "");
+				v.addChild(newNode);
+				newNode.addParent(v);
+				
+				String reason1 = reason.substring(0,i);
+				String reason2 = reason.substring(i,reason.length());
+				
+				return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2); 
+			}
+			if (c == '&' && parenDepth == 0) {
+				//keep track of this in case no |s
+				andIndex = i;
+			}
+			
+			if (c == '!' && parenDepth == 0) {
+				//keep track of this in case no |s or &s
+				orIndex = i;
+			}
+		}
+		
+		if (orIndex == -1) {
+			if (andIndex != -1) {
+				//return good candidate
+				char c = reason.charAt(andIndex);
+				
+				Vertex newNode = new Vertex(c + "");
+				v.addChild(newNode);
+				newNode.addParent(v);
+				
+				String reason1 = reason.substring(0,andIndex);
+				String reason2 = reason.substring(andIndex,reason.length());
+				
+				return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2);
+			}
+			else {
+				if (notIndex != -1) {
+					//return good candidate
+					char c = reason.charAt(notIndex);
+
+					
+					Vertex newNode = new Vertex(c + "");
+					v.addChild(newNode);
+					newNode.addParent(v);
+					
+					String reason1 = reason.substring(0,notIndex);
+					String reason2 = reason.substring(notIndex,reason.length());
+					
+					return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2);
+				}
+				else {
+					//must be contained within parentheses
+					reason = reason.substring(1,reason.length());
+					return reasonBuilder(v, reason);
+				}
+			}
+			
+		}
+
+		return false;
+		
+	}
+	
 	public static void list()
 	{
 		System.out.println("Variables:");
