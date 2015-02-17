@@ -14,12 +14,24 @@ public class Graph {
 	}	
 	
 	
-	public boolean addEndNode (Vertex v) {
+	public boolean addLeafNode (Vertex v) {
 		
 		if (leafNodes.contains(v))
 			return false;
 		
 		return leafNodes.add(v);
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Graph)){
+			return false;
+		}
+		Graph other = (Graph) o;
+		
+		return this.reason.equals(other.reason);
+		
+	}
+	
 	
 }
