@@ -3,57 +3,63 @@ import java.util.Scanner;
 
 public class Parser {
 
-	/**
-	 * @param args
-	 */
 	public static void main(String[] args) {
 
 		Scanner scan = new Scanner (System.in);
 		
 		String input = null;
+		String cmd = null;
+		String argument = null;
 		
 		while (true) {
 		
 			input = scan.nextLine();
+			String cmdArg[] = input.split(" ", 2);
+			cmd = cmdArg[0].trim();					// gets the command argument i.e. Teach, List, Learn
+			argument = cmdArg[1].trim();
 			
-			if (input.contains("Teach")) {
+			if (cmd.equals("Teach")) {
 				
-				if (input.contains("=")) {
+				if (argument.contains("=")) {
 					
-					if (input.contains('"')){
-						variableInitializer(input);
+					String teach[] =  argument.split("="); 	// split into name and value
+					teach[0] = teach[0].trim();		// get rid of leading and trailing whitespace
+					teach[1] = teach[1].trim();
+					
+					if (teach[1].contains("\"")){
+						variableInitializer(teach[0], teach[1]);
 					}
 					else {
-						variableBooleanSetter(input);
+						variableBooleanSetter(teach[0], teach[1]);
 					}
 					
 				}
 					
+				else if (argument.contains("->")) {
+					String teach[] =  argument.split("->"); // split into exp and varName
+					teach[0] = teach[0].trim();		// get rid of leading and trailing whitespace
+					teach[1] = teach[1].trim();
+					commandParser(teach[0], teach[1]);
+				}
 					
-				if (input.contains("->"))
-					commandParser(input);
-					
-				
 			}
 			
-			
-			
-			if (input.toLowerCase().equals("stop"))
+			if (cmd.toLowerCase().equals("stop"))
 				break;
 			
 		}
 		
 	}
 	
-	public void variableInitializer (String input) {
+	public void variableInitializer (String name, String value) {
 		
 	}
 	
-	public void variableBooleanSetter (String input) {
+	public void variableBooleanSetter (String name, String value) {
 		
 	}
 	
-	public void commandParser (String input ) {
+	public void commandParser (String exp, String varName) {
 		
 	}
 
