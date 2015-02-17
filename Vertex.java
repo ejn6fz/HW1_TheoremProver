@@ -9,6 +9,7 @@ public class Vertex {
 	
 	public Vertex(String value) {
 		this.value = value;
+		children = new LinkedList<Vertex>();
 	}
 	
 	public void addParent(Vertex v) {
