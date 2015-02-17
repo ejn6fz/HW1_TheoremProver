@@ -1,3 +1,4 @@
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -5,13 +6,14 @@ import java.util.Scanner;
 
 public class Parser {
 	
-	public static ArrayList<String> rules = new ArrayList<String>();
+	public static ArrayList<Graph> rules = new ArrayList<Graph>();
 	public static ArrayList<String> variables = new ArrayList<String>();
 	public static ArrayList<String> knownFacts = new ArrayList<String>();
 	public static Hashtable<String, String> definitions = new Hashtable<String, String>();
 	public static Hashtable<String, Boolean> boolVals = new Hashtable<String, Boolean>();
+	public static Graph current;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 
 		Scanner scan = new Scanner (System.in);
 		String input = null;
@@ -88,6 +90,7 @@ public class Parser {
 		// 	3. If it is, change the existing value of the name key to this value
 		else
 		{	
+			// 4. Add name to the ArrayList of known facts if it isn't already there
 			if(value.equals("true"))
 			{
 				if(!(knownFacts.contains(name)))
@@ -109,15 +112,23 @@ public class Parser {
 	
 	public static void commandParser (String exp, String varName) {
 		String rule = exp + " -> " + varName;
-		if(rules.contains(rule))
+
+		Vertex root = new Vertex(varName);
+		
+		current = new Graph(root, rule);
+		
+		if(rules.contains(current))
 			System.out.println("The rule \"" + rule + "\" already exists.");
 		else
 		{
-			rules.add(rule);
+			reasonBuilder(root, exp);
+			
+			rules.add(current);
 		}
+		
+
 	}
-	
-		public static boolean reasonBuilder(Vertex v, String reason) {
+	public static boolean reasonBuilder(Vertex v, String reason) {
 		
 		if (!(reason.contains("!") | reason.contains("&") | reason.contains("|"))) {
 			if(reason.charAt(0) == '(' && reason.charAt(reason.length()-1) == ')') {
@@ -151,7 +162,7 @@ public class Parser {
 				newNode.addParent(v);
 				
 				String reason1 = reason.substring(0,i);
-				String reason2 = reason.substring(i,reason.length());
+				String reason2 = reason.substring(i+1,reason.length());
 				
 				return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2); 
 			}
@@ -176,7 +187,7 @@ public class Parser {
 				newNode.addParent(v);
 				
 				String reason1 = reason.substring(0,andIndex);
-				String reason2 = reason.substring(andIndex,reason.length());
+				String reason2 = reason.substring(andIndex+1,reason.length());
 				
 				return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2);
 			}
@@ -190,14 +201,14 @@ public class Parser {
 					v.addChild(newNode);
 					newNode.addParent(v);
 					
-					String reason1 = reason.substring(0,notIndex);
-					String reason2 = reason.substring(notIndex,reason.length());
+					//String reason1 = reason.substring(0,notIndex);
+					String reason2 = reason.substring(notIndex+1,reason.length());
 					
-					return reasonBuilder(newNode, reason1) && reasonBuilder(newNode, reason2);
+					return reasonBuilder(newNode, reason2);
 				}
 				else {
 					//must be contained within parentheses
-					reason = reason.substring(1,reason.length());
+					reason = reason.substring(1,reason.length()-1);
 					return reasonBuilder(v, reason);
 				}
 			}
@@ -228,7 +239,7 @@ public class Parser {
 		System.out.println("Rules:");
 		for(int i = 0; i < rules.size(); i++)
 		{
-			String rule = rules.get(i);
+			String rule = rules.get(i).reason;
 			System.out.println("\t" + rule);
 		}
 	}
