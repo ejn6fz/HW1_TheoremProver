@@ -4,27 +4,22 @@ import java.util.*;
 public class Graph {
 
 	Vertex root;
-	LinkedList<Vertex> endNodes;
+	LinkedList<Vertex> leafNodes;
+	String reason;
 	
-	public Graph(Vertex root) {
+	public Graph(Vertex root, String reason) {
 		this.root = root;
-		endNodes = new LinkedList<Vertex>();
-	}
+		leafNodes = new LinkedList<Vertex>();
+		this.reason = reason; 
+	}	
+	
 	
 	public boolean addEndNode (Vertex v) {
 		
-		if (endNodes.contains(v))
+		if (leafNodes.contains(v))
 			return false;
 		
-		return endNodes.add(v);
+		return leafNodes.add(v);
 	}
-	
-	public boolean connectDowntoUp(Vertex down, Vertex up) {
-		
-		return down.addUpstream(up) && up.addDownstream(down);
-
-	}
-	
-	
 	
 }
