@@ -21,4 +21,15 @@ public class Vertex {
 		return children.add(v);
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Vertex)){
+			return false;
+		}
+		Vertex other = (Vertex) o;
+		
+		return this.value.equals(other.value);
+		
+	}
+	
 }
