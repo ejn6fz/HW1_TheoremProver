@@ -1,0 +1,13 @@
+Teach A = "aaa"
+Teach B = "bbb"
+Teach C = "ccc"
+Teach D = "ddd"
+Teach A = true
+Teach B = false
+Teach A&!B -> C
+Teach A&C -> D
+Teach E = "eee"
+Teach (A|B)&C|!D&(A|(B&C)) -> E
+List
+Learn
+List
