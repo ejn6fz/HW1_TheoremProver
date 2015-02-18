@@ -58,6 +58,9 @@ public class Parser {
 			if(cmd.equals("List"))
 				list();
 			
+			if(cmd.equals("Learn"))
+				learn();
+			
 			if (cmd.toLowerCase().equals("stop"))
 				break;
 		}
@@ -130,7 +133,7 @@ public class Parser {
 	}
 	public static boolean reasonBuilder(Vertex v, String reason) {
 		
-		if (!(reason.contains("!") | reason.contains("&") | reason.contains("|"))) {
+		if (!(reason.contains("!") || reason.contains("&") || reason.contains("|"))) {
 			if(reason.charAt(0) == '(' && reason.charAt(reason.length()-1) == ')') {
 				reason = reason.substring(1,reason.length()-1);
 			}
@@ -173,7 +176,7 @@ public class Parser {
 			
 			if (c == '!' && parenDepth == 0) {
 				//keep track of this in case no |s or &s
-				orIndex = i;
+				notIndex = i;
 			}
 		}
 		
@@ -203,6 +206,7 @@ public class Parser {
 					
 					//String reason1 = reason.substring(0,notIndex);
 					String reason2 = reason.substring(notIndex+1,reason.length());
+					
 					
 					return reasonBuilder(newNode, reason2);
 				}
@@ -243,5 +247,129 @@ public class Parser {
 			System.out.println("\t" + rule);
 		}
 	}
+	
+	public static void learn(){
+		for(int i = 0; i < rules.size(); i++){
+			Graph g = rules.get(i);
+			Vertex leaf1 = g.leafNodes.get(0);
+			
+			int b = forwardChaining(leaf1,1);
+			if (b == 1) {
+				variableBooleanSetter(g.root.value, "true");
+			}
+		}
+	}
+	
+	public static int forwardChaining(Vertex v, int b) {
+		
+		if (v.parent == null) {
+			return b;
+		}
+		
+		if (!v.value.equals("!") &&  !v.value.equals("&") &&  !v.value.equals("|")) {
+			
+			if (knownFacts.contains(v.value)) {
+				return forwardChaining(v.parent, 1);
+				
+			} else if (knownFacts.contains("!" + v.value)) {
+				
+				return forwardChaining(v.parent, 2);
+				
+			} else {
+				return 3;
+			}
+			
+		}
+		else if (v.value.equals("!")) {
+			
+			if (b == 3)
+				return forwardChaining (v.parent, b);
+			else {
+				return forwardChaining (v.parent, (b -2) * -1 + 1);
+			}
+		}
+		else if (v.value.equals("&")) {
+			
+			int b2 = forwardChainingBackwards(v.children.get(1));
+			if (b == 1 && b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		else if (v.value.equals("|")) {
+			
+			int b2 = forwardChainingBackwards(v.children.get(1));
+			if (b == 1 || b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+
+			
+		}
+		
+		return 3;
+	}
+	
+	public static int forwardChainingBackwards(Vertex v) {
+		
+		if (!v.value.equals("!") &&  !v.value.equals("&") &&  !v.value.equals("|")) {
+			
+			if (knownFacts.contains(v.value)) {
+				
+				return 1;
+				
+			}
+			else if (knownFacts.contains("!" + v.value)) {
+				
+				return 2;
+				
+			}
+			else {
+				return 3;
+			}
+		}
+		else if (v.value.equals("!")) {
+			
+			int b = forwardChainingBackwards (v.children.get(0));
+			if (b == 3)
+				return b;
+			else 
+				return (b -2) * -1 + 1;
+			
+		}
+		else if (v.value.equals("&")) {
+			
+			int b = forwardChainingBackwards(v.children.get(0));
+			int b2 = forwardChainingBackwards(v.children.get(1));
+			if (b == 1 && b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		else if (v.value.equals("|")) {
+			
+			int b = forwardChainingBackwards(v.children.get(0));
+			int b2 = forwardChainingBackwards(v.children.get(1));
+			if (b == 1 || b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		
+		
+		return 3;
+	}
+	
 
 }
