@@ -150,7 +150,6 @@ public class Parser {
 				reason = reason.substring(1,reason.length()-1);
 			}
 			Vertex leafNode = new Vertex(reason);
-			leafNode.isVariable = true;
 			
 			v.addChild(leafNode);
 			leafNode.addParent(v);
@@ -397,7 +396,6 @@ public class Parser {
 		
 		if (rootIndex == 0 && !rootCharacter.equals("!") ) {
 			root = new Vertex(argument);
-			root.isVariable = true;
 			current = new Graph(root, argument);
 		} 
 		else {
@@ -549,7 +547,6 @@ public class Parser {
 		
 		if (rootIndex == 0 && !rootCharacter.equals("!") ) {
 			root = new Vertex(argument);
-			root.isVariable = true;
 			current = new Graph(root, argument);
 		} 
 		else {
