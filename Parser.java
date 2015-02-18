@@ -12,6 +12,7 @@ public class Parser {
 	public static Hashtable<String, String> definitions = new Hashtable<String, String>();
 	public static Hashtable<String, Boolean> boolVals = new Hashtable<String, Boolean>();
 	public static Graph current;
+	public static String whyReason = "";
 	
 	public static void main(String[] args) throws FileNotFoundException {
 
@@ -38,7 +39,8 @@ public class Parser {
 					
 					if (teach[1].contains("\"")) 
 					{
-						variableInitializer(teach[0], teach[1]);
+						String s = teach[1].substring(1, teach[1].length()-1);
+						variableInitializer(teach[0], s);
 					}
 					else 
 					{
@@ -60,6 +62,16 @@ public class Parser {
 			
 			if(cmd.equals("Learn"))
 				learn();
+			
+			if(cmd.equals("Query")) {
+				
+				argument = cmdArg[1].trim();
+				query(argument);
+			}
+			if(cmd.equals("Why")) {
+				argument = cmdArg[1].trim();
+				why(argument);
+			}
 			
 			if (cmd.toLowerCase().equals("stop"))
 				break;
@@ -138,6 +150,7 @@ public class Parser {
 				reason = reason.substring(1,reason.length()-1);
 			}
 			Vertex leafNode = new Vertex(reason);
+			leafNode.isVariable = true;
 			
 			v.addChild(leafNode);
 			leafNode.addParent(v);
@@ -371,5 +384,319 @@ public class Parser {
 		return 3;
 	}
 	
+	
+	public static void query(String argument) {
+	
+		if(argument.charAt(0) == '(' && argument.charAt(argument.length()-1) == ')') {
+			argument = argument.substring(1,argument.length()-1);
+		}
+		
+		int rootIndex = findRoot(argument);
+		Vertex root;
+		String rootCharacter = argument.charAt(rootIndex) + "";
+		
+		if (rootIndex == 0 && !rootCharacter.equals("!") ) {
+			root = new Vertex(argument);
+			root.isVariable = true;
+			current = new Graph(root, argument);
+		} 
+		else {
+			
+			root = new Vertex(rootCharacter);
+			
+			current = new Graph(root, argument);
+			
+			if (rootIndex != 0)
+				reasonBuilder(root, argument.substring(0,rootIndex));
+			
+			reasonBuilder(root, argument.substring(rootIndex+1,argument.length()));		
+			
+		}
+		
+		int result = backwardChaining(root);
+		if (result == 1)
+			System.out.println("true");
+		else
+			System.out.println("false");
+		
+	}
+	
+	public static int findRoot(String reason) {
 
+		if (!(reason.contains("!") || reason.contains("&") || reason.contains("|"))) {		
+			return 0;
+		}
+		
+		int parenDepth = 0;
+		int orIndex = -1;
+		int andIndex = -1;
+		int notIndex = -1;
+		
+		for (int i = 0; i < reason.length(); i++) {
+			char c = reason.charAt(i);
+			
+			if (c == '(')
+				parenDepth ++;
+			if (c == ')')
+				parenDepth --;
+			
+			if (c == '|' && parenDepth == 0) {
+				//return good candidate
+				return i; 
+			}
+			if (c == '&' && parenDepth == 0) {
+				//keep track of this in case no |s
+				andIndex = i;
+			}
+			
+			if (c == '!' && parenDepth == 0) {
+				//keep track of this in case no |s or &s
+				notIndex = i;
+			}
+		}
+		
+		if (orIndex == -1) {
+			if (andIndex != -1) {
+				//return good candidate
+				
+				return andIndex;
+			}
+			else {
+				if (notIndex != -1) {
+					//return good candidate
+					
+					return notIndex;
+				}
+				else {
+					//must be contained within parentheses
+					reason = reason.substring(1,reason.length()-1);
+					return findRoot(reason);
+				}
+			}
+			
+		}
+
+		return -1;
+	}
+	
+	public static int backwardChaining (Vertex v) {
+		
+		if (!v.value.equals("!") &&  !v.value.equals("&") &&  !v.value.equals("|")) {
+			if (knownFacts.contains(v.value)) {
+				return 1;
+				
+			} else if (knownFacts.contains("!" + v.value)) {				
+				return 2;
+				
+			} else {
+				for (Graph g : rules) {
+					
+					if (g.root.equals(v)){	
+						return backwardChaining(g.root.children.get(0));
+					}
+				}
+				return 3;
+			}
+		}
+		
+		else if (v.value.equals("!")) {
+			
+			int b = backwardChaining (v.children.get(0));
+			if (b == 3)
+				return b;
+			else 
+				return (b -2) * -1 + 1;
+			
+		}
+		else if (v.value.equals("&")) {
+			
+			int b = backwardChaining(v.children.get(0));
+			int b2 = backwardChaining(v.children.get(1));
+			if (b == 1 && b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		else if (v.value.equals("|")) {
+			
+			int b = backwardChaining(v.children.get(0));
+			int b2 = backwardChaining(v.children.get(1));
+			if (b == 1 || b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		
+		return 5;
+		
+	}
+	
+	public static void why(String argument) {
+		
+		if(argument.charAt(0) == '(' && argument.charAt(argument.length()-1) == ')') {
+			argument = argument.substring(1,argument.length()-1);
+		}
+		
+		int rootIndex = findRoot(argument);
+		Vertex root;
+		String rootCharacter = argument.charAt(rootIndex) + "";
+		
+		if (rootIndex == 0 && !rootCharacter.equals("!") ) {
+			root = new Vertex(argument);
+			root.isVariable = true;
+			current = new Graph(root, argument);
+		} 
+		else {
+			
+			root = new Vertex(rootCharacter);
+			
+			current = new Graph(root, argument);
+			
+			if (rootIndex != 0)
+				reasonBuilder(root, argument.substring(0,rootIndex));
+			
+			reasonBuilder(root, argument.substring(rootIndex+1,argument.length()));		
+			
+		}
+		
+		int result = backwardChainingWhy(root);
+		if (result == 1) {
+			System.out.println("true");
+			System.out.println(whyReason + "THUS I KNOW THAT " + expressionFiller(argument));
+		}
+		else {
+			System.out.println("false");
+			System.out.println( whyReason + "THUS I CANNOT PROVE THAT " + expressionFiller(argument));
+		}
+	}
+	
+	public static int backwardChainingWhy(Vertex v) {
+		
+		if (!v.value.equals("!") &&  !v.value.equals("&") &&  !v.value.equals("|")) {
+			
+			String def = definitions.get(v.value);
+			
+			String falseReason = "";
+			
+			if (knownFacts.contains(v.value)) {
+				whyReason += "I KNOW THAT " + def + "\n";
+				return 1;
+				
+			} else {
+				for (Graph g : rules) {
+					
+					if (g.root.equals(v)){
+						
+						int result =  backwardChainingWhy(g.root.children.get(0));
+						
+						if (result == 1) {
+							//helper method that inserts definitions for variable names
+							whyReason += "BECAUSE IT IS TRUE THAT " + expressionFiller(g.reason) + " I KNOW THAT " + def +"\n";
+							return result;
+						} else {
+							falseReason += "BECAUSE IT IS NOT TRUE THAT " + expressionFiller(g.reason) + " I DON'T KNOW THAT " + def + "\n";
+						}
+						
+					}
+				}
+				if (knownFacts.contains("!" + v.value)) {	
+					whyReason += "I KNOW IT IS NOT TRUE THAT " + def + "\n";
+					return 2;
+					
+				}
+				whyReason += falseReason;
+				
+				return 3;
+			}
+		}
+		
+		else if (v.value.equals("!")) {
+			
+			int b = backwardChainingWhy(v.children.get(0));
+			if (b == 3)
+				return b;
+			else 
+				return (b -2) * -1 + 1;
+			
+		}
+		else if (v.value.equals("&")) {
+			
+			int b = backwardChainingWhy(v.children.get(0));
+			int b2 = backwardChainingWhy(v.children.get(1));
+			if (b == 1 && b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		else if (v.value.equals("|")) {
+			
+			int b = backwardChainingWhy(v.children.get(0));
+			int b2 = backwardChainingWhy(v.children.get(1));
+			if (b == 1 || b2 == 1)
+				return 1;
+			else if (b == 3 || b2 == 3)
+				return 3;
+			else 
+				return 2;
+			
+		}
+		
+		return 5;
+		
+	}
+	
+	public static String expressionFiller (String expr) {
+		
+		String expression[] = expr.split(" -> ");
+		expr = expression[0];
+		
+		String filledExpr = "";		
+		String variable = "";
+		
+		for (int i = 0; i < expr.length(); i++) {
+			char currentChar = expr.charAt(i);
+			
+			if (currentChar == '(' ) {				
+				filledExpr += currentChar;
+			} else if (currentChar == ')') {
+				variable = definitions.get(variable);
+				if (variable != null)
+					filledExpr += variable;				
+				variable = "";
+				filledExpr += currentChar;
+			} else if (currentChar == '!') {
+				variable = definitions.get(variable);
+				if (variable != null)
+					filledExpr += variable;		
+				variable = "";
+				filledExpr += "IT IS NOT TRUE THAT ";
+			} else if (currentChar == '&') {
+				variable = definitions.get(variable);
+				if (variable != null)
+					filledExpr += variable;		
+				variable = "";
+				filledExpr += " AND ";
+			} else if (currentChar == '|') {
+				variable = definitions.get(variable);
+				if (variable != null)
+					filledExpr += variable;		
+				variable = "";
+				filledExpr += " OR ";
+			} else {
+				variable += currentChar + "";
+			}
+		}
+		
+		return filledExpr;
+	}
+	
 }
