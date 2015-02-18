@@ -242,7 +242,7 @@ public class Parser {
 		for(int i = 0; i < variables.size(); i++)
 		{
 			String var = variables.get(i);
-			String val = definitions.get(var);
+			String val = "\"" + definitions.get(var) + "\"";
 			System.out.println("\t" + var + " = " + val);
 		}
 		
@@ -574,6 +574,7 @@ public class Parser {
 			System.out.println("false");
 			System.out.println( whyReason + "THUS I CANNOT PROVE THAT " + expressionFiller(argument));
 		}
+		whyReason = "";
 	}
 	
 	public static int backwardChainingWhy(Vertex v) {
@@ -695,6 +696,9 @@ public class Parser {
 				variable += currentChar + "";
 			}
 		}
+		variable = definitions.get(variable);
+		if (variable != null)
+			filledExpr += variable;	
 		
 		return filledExpr;
 	}
