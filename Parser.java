@@ -21,7 +21,7 @@ public class Parser {
 		String cmd = null;
 		String argument = null;
 		
-		while (true) {
+		while (scan.hasNext()) {
 		
 			input = scan.nextLine();
 			String cmdArg[] = input.split(" ", 2);
@@ -288,7 +288,7 @@ public class Parser {
 				return forwardChaining(v.parent, 2);
 				
 			} else {
-				return 3;
+				return forwardChaining(v.parent, 2);
 			}
 			
 		}
@@ -304,22 +304,22 @@ public class Parser {
 			
 			int b2 = forwardChainingBackwards(v.children.get(1));
 			if (b == 1 && b2 == 1)
-				return 1;
+				return forwardChaining (v.parent, 1);
 			else if (b == 3 || b2 == 3)
-				return 3;
+				return forwardChaining (v.parent, 3);
 			else 
-				return 2;
+				return forwardChaining (v.parent, 2);
 			
 		}
 		else if (v.value.equals("|")) {
 			
 			int b2 = forwardChainingBackwards(v.children.get(1));
 			if (b == 1 || b2 == 1)
-				return 1;
+				return forwardChaining (v.parent, 1);
 			else if (b == 3 || b2 == 3)
-				return 3;
+				return forwardChaining (v.parent, 3);
 			else 
-				return 2;
+				return forwardChaining (v.parent, 2);
 
 			
 		}
@@ -342,7 +342,7 @@ public class Parser {
 				
 			}
 			else {
-				return 3;
+				return 2;
 			}
 		}
 		else if (v.value.equals("!")) {
@@ -351,7 +351,7 @@ public class Parser {
 			if (b == 3)
 				return b;
 			else 
-				return (b -2) * -1 + 1;
+				return (b - 2) * -1 + 1;
 			
 		}
 		else if (v.value.equals("&")) {
@@ -380,7 +380,7 @@ public class Parser {
 		}
 		
 		
-		return 3;
+		return 2;
 	}
 	
 	
@@ -493,7 +493,7 @@ public class Parser {
 						return backwardChaining(g.root.children.get(0));
 					}
 				}
-				return 3;
+				return 2;
 			}
 		}
 		
@@ -582,11 +582,6 @@ public class Parser {
 			
 			String falseReason = "";
 			
-			if (knownFacts.contains(v.value)) {
-				whyReason += "I KNOW THAT " + def + "\n";
-				return 1;
-				
-			} else {
 				for (Graph g : rules) {
 					
 					if (g.root.equals(v)){
@@ -603,15 +598,20 @@ public class Parser {
 						
 					}
 				}
-				if (knownFacts.contains("!" + v.value)) {	
-					whyReason += "I KNOW IT IS NOT TRUE THAT " + def + "\n";
-					return 2;
+			if (knownFacts.contains(v.value)) {
+				whyReason += "I KNOW THAT " + def + "\n";
+				return 1;
 					
-				}
-				whyReason += falseReason;
-				
-				return 3;
 			}
+			else if (knownFacts.contains("!" + v.value)) {	
+				whyReason += "I KNOW IT IS NOT TRUE THAT " + def + "\n";
+				return 2;
+					
+			}
+			whyReason += falseReason;
+			
+			
+			return 2;
 		}
 		
 		else if (v.value.equals("!")) {
